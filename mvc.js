@@ -81,17 +81,15 @@ var Views = {
 				_fireIfPresent('onrenderstart');
 			
 				_queueIfPresent('onload');
-			
+				
 				var html = _templater.tmpl(body.template, model || {});
-
+				
 				_fireIfPresent('onrenderend');		
 				
 				if(parent) {
 					parent.innerHTML += html;
 					
-					if(parent === document.body) {
-						_fireQueuedEvents();
-					}
+					_fireQueuedEvents();
 				} 
 				
 				return html;
@@ -99,4 +97,34 @@ var Views = {
 		
 		};
 	}
+}
+
+
+function Model(body) {
+
+	var _events = [];
+
+	var _notify = function(property) {	
+		if(_events[property]) {
+			for(var i=0; i<_events[property].length; i++) {
+				_events[property][i](body[property]);			
+			}
+		}	
+	};
+	
+	this.get = function(property) {
+		return body[property];
+	};
+	
+	this.set = function(property, value) {
+		body[property] = value;
+		_notify(property);
+	};
+	
+	this.onchange = function(property, handler) {
+		if(!_events[property]) {
+			_events[property] = [];
+		}
+		_events[property].push(handler);
+	};
 }

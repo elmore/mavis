@@ -33,7 +33,7 @@
 			<img id="mask-corners" style="position: absolute; opacity: 0.6; left: 145px; top: 79px; width: 241px; height: 153px;" src="<%=cdnLocation%>/ServerSide/Components/Desktop/resources/knockout_corners_opque_white_60pc.png">
 			<div id="overlay" style="width: 100%; height: 100%; position: relative; background-color: rgb(255, 255, 255); opacity: 0; cursor: pointer;"></div>
 		</div>
-		<%=(new InputView(viewmodel)).render()%>
+		<%=(new InputView(viewmodel.inputmodel)).render()%>
 	</script>
 
 
@@ -43,23 +43,35 @@
 
 
 		var InputView = new Views.ViewType({
-			template : "<input type=\"text\" value=\"<%=label%>\" />",
+			template : "<input type=\"text\" id=\"label-field\" value=\"<%=get('label')%>\" />",
 			
 			onrenderstart : function() {
 				//alert("onrenderstart :: InputView")
 			},
 			
-			onload : function(el) {
-				alert('onload :: InputView')
+			onload : function(model) {
+				//alert('onload :: InputView')
+				
+				document.getElementById('label-field').onchange = function() {
+					model.set('label', this.value);
+				};
+				
+				model.onchange('label', function(newval) {
+					document.getElementById('label-field').value = newval;
+				});
 			}
 		});
 		
 		
 		var DivView = new Views.ViewType({
-			template : "<div><h1><%=label%></h1><p><%=(new InputView(viewmodel)).render()%></p></div>",
+			template : "<div><h1 id=\"title\"><%=get('label')%></h1><p><%=(new InputView(viewmodel)).render()%></p></div>",
 			
-			onrenderstart : function(model) {
+			onload : function(model) {
 				//alert("onrenderstart :: DivView")
+				
+				model.onchange('label', function(newval) {
+					document.getElementById('title').innerHTML = newval;
+				});
 			}			
 		});
 		
@@ -72,24 +84,44 @@
 			},
 			
 			onload : function(el) {
-				alert(document.getElementById('mask-bottom').id)
+				//alert(document.getElementById('mask-bottom').id)
 			}
 		
 		});
 		
 		//var view1 = new DivView({ label : "my input" });
 		//view1.render(document.body);
+		//DesignerStageView
 		
-		var view1 = new DesignerStageView({ 
+		
+		var m = new Model({ 
 			cdnLocation : "https://localhost/PCS/CDN", 
-			label : "hiii", 
-			templateUrl : "https://localhost/API/designers/850451b4-5c31-4c91-b210-4aa8da9ab028/Templates/4820.png?size=Small" });
-			
-		view1.render(document.body);
+			label : "hiii there",
+			templateUrl : "https://localhost/API/designers/850451b4-5c31-4c91-b210-4aa8da9ab028/Templates/4820.png?size=Small",
+			inputmodel : { label : "hiii there" }
+			});
+		
+		
+		
+		/*
+		m.onchange('label', function(newval) {
+			alert(newval);
+		
+		});
+		m.onchange('label', function(newval) {
+			alert("2" + newval);
+		
+		});
+		*/
+		
+		//m.set('label', 'i changed you');
+		
+		//var view1 = new InputView(m);
+		//view1.render(document.body);
 	
-		
-		
-		
+
+		var view2 = new DivView(m);
+		view2.render(document.body);
 	
 		//var el = document.createElement('div');
 		//el.onload = 
