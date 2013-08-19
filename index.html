@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html lang="en-US">
+<head>
+	<meta charset="UTF-8">
+	<title></title>
+</head>
+<body>
+
+
+	<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
+	<script type="text/javascript" src="jquery.livequery.min.js"></script>
+
+	<script type="text/javascript" src="micro-templating.js"></script>
+	<script type="text/javascript" src="mvc.js"></script>
+
+
+
+	<script type="text/html-template" id="designer_stage" >
+		<div id="desktop1" class="ssg-desktop" style="position: relative; overflow: hidden;">
+			<div id="customerImage" style="">
+				<img id="desktop-spinner" src="<%=cdnLocation%>/ServerSide/Components/Desktop/resources/spinner.gif">
+				<div class="handle-circle" style="position: absolute; background-color: rgb(255, 255, 255); width: 9px; height: 9px; cursor: pointer; border-radius: 5px 5px 5px 5px; border: 1px solid rgb(49, 183, 219); right: -5px; bottom: -5px;"></div>
+				<div class="handle-circle" style="position: absolute; background-color: rgb(255, 255, 255); width: 9px; height: 9px; cursor: pointer; border-radius: 5px 5px 5px 5px; border: 1px solid rgb(49, 183, 219); left: -5px; top: -5px;"></div>
+				<div class="handle-circle hightlighted-handle" style="position: absolute; background-color: rgb(255, 255, 255); width: 9px; height: 9px; cursor: pointer; border-radius: 5px 5px 5px 5px; border: 1px solid rgb(49, 183, 219); right: -5px; top: -5px;"></div>
+				<div class="handle-circle" style="position: absolute; background-color: rgb(255, 255, 255); width: 9px; height: 9px; cursor: pointer; border-radius: 5px 5px 5px 5px; border: 1px solid rgb(49, 183, 219); left: -5px; bottom: -5px;"></div>
+			</div>
+			<img id="productTemplate" style="position: absolute; width:241px; height:153px" src="<%=templateUrl%>">
+			<div id="bleed-glow" style="position: absolute; border: 5px solid rgb(49, 183, 219); border-radius: 15px 15px 15px 15px; opacity: 0.4; display: block;"></div>
+			<div id="mask-top" class="mask" style="position: absolute; width: 100%; top: 0px; opacity: 0.6; background-color: rgb(255, 255, 255); height: 79px;"></div>
+			<div id="mask-left" class="mask" style="position: absolute; left: 0px; opacity: 0.6; background-color: rgb(255, 255, 255); width: 145px; top: 79px; height: 153px;"></div>
+			<div id="mask-bottom" class="mask" style="position: absolute; width: 100%; opacity: 0.6; background-color: rgb(255, 255, 255); height: 79px; top: 232px;"></div>
+			<div id="mask-right" class="mask" style="position: absolute; opacity: 0.6; background-color: rgb(255, 255, 255); width: 145px; top: 79px; left: 386px; height: 153px;"></div>
+			<img id="mask-corners" style="position: absolute; opacity: 0.6; left: 145px; top: 79px; width: 241px; height: 153px;" src="<%=cdnLocation%>/ServerSide/Components/Desktop/resources/knockout_corners_opque_white_60pc.png">
+			<div id="overlay" style="width: 100%; height: 100%; position: relative; background-color: rgb(255, 255, 255); opacity: 0; cursor: pointer;"></div>
+		</div>
+		<%=(new InputView(viewmodel)).render()%>
+	</script>
+
+
+
+	<script type="text/javascript">
+
+
+
+		var InputView = new Views.ViewType({
+			template : "<input type=\"text\" value=\"<%=label%>\" />",
+			
+			onrenderstart : function() {
+				//alert("onrenderstart :: InputView")
+			},
+			
+			onload : function(el) {
+				alert('onload :: InputView')
+			}
+		});
+		
+		
+		var DivView = new Views.ViewType({
+			template : "<div><h1><%=label%></h1><p><%=(new InputView(viewmodel)).render()%></p></div>",
+			
+			onrenderstart : function(model) {
+				//alert("onrenderstart :: DivView")
+			}			
+		});
+		
+		var DesignerStageView = Views.ViewType({
+		
+			template : "designer_stage",
+			
+			onrenderstart : function(model) {
+				//alert("onrenderstart :: DesignerStageView")
+			},
+			
+			onload : function(el) {
+				alert(document.getElementById('mask-bottom').id)
+			}
+		
+		});
+		
+		//var view1 = new DivView({ label : "my input" });
+		//view1.render(document.body);
+		
+		var view1 = new DesignerStageView({ 
+			cdnLocation : "https://localhost/PCS/CDN", 
+			label : "hiii", 
+			templateUrl : "https://localhost/API/designers/850451b4-5c31-4c91-b210-4aa8da9ab028/Templates/4820.png?size=Small" });
+			
+		view1.render(document.body);
+	
+		
+		
+		
+	
+		//var el = document.createElement('div');
+		//el.onload = 
+	
+	</script>
+</body>
+</html>
