@@ -6,15 +6,21 @@
 * can mixin this type to aid validation
 */ 
 function InterfaceType(body) {
+
 	body.implements = function(implementation) {
+	
 		for(prop in body) {
+		
 			if(body.hasOwnProperty(prop) && prop !== 'implements') {
+			
 				if(!implementation.hasOwnProperty(prop) 
 					|| typeof implementation[prop] != typeof body[prop]) {
+					
 					return false;
 				}
 			}
 		}
+		
 		return true;
 	};
 	
@@ -22,12 +28,64 @@ function InterfaceType(body) {
 }
 
 
+var HtmlEntities = {
+	// smoothing over the setting of values
+	asSetter : function(domEl) {
+		
+		var action;
+		
+		if(domEl.value) {
+		
+			action = function(val) {
+			
+				domEl.value = val;
+			};
+		} else {
+		
+			action = function(val) {
+			
+				domEl.innerHTML = val;
+			};
+		}
+		
+		return {
+		
+			set : function(val) {
+			
+				action(val);
+			}
+		};
+	}
+
+
+};
+
+
+var Helpers = {
+
+	asValidatedInput : function(elementName, validateAction) {
+	
+		return function() {
+		
+			var el = document.getElementById(elementName);
+			
+			el.validate = function() { return validateAction(el.value); }
+			
+			return el;
+		};
+	}
+	
+	
+
+};
+
 
 
 
 
 /* view interface */
 var iView = new InterfaceType({
+
 	template : ''
 });
 
@@ -37,44 +95,86 @@ var iView = new InterfaceType({
 var Views = {
 
 	EventQueue : [],
-
+		
+	FireQueuedEvents : function() {
+	
+		while(Views.EventQueue.length > 0) {
+		
+			(Views.EventQueue.shift())();
+		}
+	},
+	
+	
 	ViewType : function(body) {
 		
 		if(!iView.implements(body)) {
+		
 			throw "the body of the ViewType does not implement iView";
 		}
-		
-		var _templater = new TemplaterFactory({ starttag : "<%", endtag : "%>"});
-		
-		//var _eventQueue = [];
-		
 
-		
-		_fireQueuedEvents = function() {
-			while(Views.EventQueue.length > 0) {
-				Views.EventQueue.pop()();
-			}
-		};
+		var _templater = new TemplaterFactory({ starttag : "<%", endtag : "%>"});
+
 		
 		return function(model) {		
 			
 			
+			_queueDomBindings = function() {
+					// when everything is rendered populate the references to the 
+					// html dom elements, and do databind
+					for(el in body.define) {
+					
+						if(body.define && body.define.hasOwnProperty(el)) {
+						
+							Views.EventQueue.push((function(el) {
+							
+								return function() {
+									
+									if(typeof body.define[el] === 'function') {
+									
+										body[el] = body.define[el]();
+									} else {
+										
+										body[el] = document.getElementById(body.define[el]);
+									}
+									
+									if(body.dataBind && body.dataBind.hasOwnProperty(el)) {
+																		
+										body[el].onchange = function() {
+											
+											model.set(body.dataBind[el], this.value);
+										};
+										
+										model.onchange(body.dataBind[el], function(newval) {
+										
+											HtmlEntities.asSetter(body[el]).set(newval);
+										});
+									}
+								}
+								
+							})(el));
+						}
+					}					
+			};			
+			
 			_fireIfPresent = function(eventname, data) {
-				if(body[eventname]) { body[eventname](data || model); }
+			
+				if(body[eventname]) { body[eventname](body, data || model); }
 			};
 			
 			_queueIfPresent = function(eventname, data) {
+			
 				if(body[eventname]) { 
+				
 					Views.EventQueue.push(function() {
-						 body[eventname](data || model);
+					
+						 body[eventname](body, data || model);
 					});
 				}
 			};
 			
+			_queueDomBindings();
 			
 			_fireIfPresent('oncreate');
-			
-			
 			
 			this.render = function(parent) {
 			
@@ -87,9 +187,10 @@ var Views = {
 				_fireIfPresent('onrenderend');		
 				
 				if(parent) {
+				
 					parent.innerHTML += html;
 					
-					_fireQueuedEvents();
+					Views.FireQueuedEvents();
 				} 
 				
 				return html;
@@ -105,26 +206,35 @@ function Model(body) {
 	var _events = [];
 
 	var _notify = function(property) {	
+	
 		if(_events[property]) {
+		
 			for(var i=0; i<_events[property].length; i++) {
+			
 				_events[property][i](body[property]);			
 			}
 		}	
 	};
 	
 	this.get = function(property) {
+	
 		return body[property];
 	};
 	
 	this.set = function(property, value) {
+	
 		body[property] = value;
+		
 		_notify(property);
 	};
 	
 	this.onchange = function(property, handler) {
+	
 		if(!_events[property]) {
+		
 			_events[property] = [];
 		}
+		
 		_events[property].push(handler);
 	};
 }

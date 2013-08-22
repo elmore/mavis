@@ -43,35 +43,63 @@
 
 
 		var InputView = new Views.ViewType({
-			template : "<input type=\"text\" id=\"label-field\" value=\"<%=get('label')%>\" />",
+			template : "<input type=\"text\" id=\"label-field\" value=\"<%=get('label')%>\" />",					
 			
-			onrenderstart : function() {
+			define : {
+				labelField : 'label-field'
+			/*
+				labelField : Helpers.asValidatedInput('label-field', function(a) {
+					alert(a);
+				})
+				*/
+			},
+			
+			dataBind : {
+				labelField : 'label'
+			},
+			
+			onrenderstart : function(self, model) {
 				//alert("onrenderstart :: InputView")
 			},
 			
-			onload : function(model) {
-				//alert('onload :: InputView')
+			onload : function(self, model) {
+				/*
+				self.labelField.onchange = function() {
 				
-				document.getElementById('label-field').onchange = function() {
 					model.set('label', this.value);
 				};
 				
 				model.onchange('label', function(newval) {
-					document.getElementById('label-field').value = newval;
+				
+					self.labelField.value = newval;
+					
+					self.labelField.style.marginLeft = (newval*10) + "px";
 				});
+				*/
 			}
 		});
 		
 		
 		var DivView = new Views.ViewType({
+		
 			template : "<div><h1 id=\"title\"><%=get('label')%></h1><p><%=(new InputView(viewmodel)).render()%></p></div>",
 			
-			onload : function(model) {
+			define : {
+				h1 : 'title'
+			},
+			
+			dataBind : {
+				h1 : 'label'
+			},
+			
+			onload : function(self, model) {
 				//alert("onrenderstart :: DivView")
-				
+				/*
 				model.onchange('label', function(newval) {
-					document.getElementById('title').innerHTML = newval;
+				
+					self.h1.innerHTML = newval;
 				});
+				*/
 			}			
 		});
 		
@@ -79,11 +107,11 @@
 		
 			template : "designer_stage",
 			
-			onrenderstart : function(model) {
+			onrenderstart : function(self, model) {
 				//alert("onrenderstart :: DesignerStageView")
 			},
 			
-			onload : function(el) {
+			onload : function(self, model) {
 				//alert(document.getElementById('mask-bottom').id)
 			}
 		
@@ -125,6 +153,12 @@
 	
 		//var el = document.createElement('div');
 		//el.onload = 
+	
+		var val = 0;
+		setInterval(function() {
+			m.set('label', val);
+			val++;
+		}, 500);
 	
 	</script>
 </body>
