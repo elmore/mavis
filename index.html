@@ -61,13 +61,16 @@
 	
 	
 		var InputView = new Views.ViewType({
+		
 			template : "<input type=\"text\" id=\"label-field\" value=\"<%=get('label')%>\" />",					
 			
 			define : {
+			
 				labelField : Using.id('label-field').as(asColouriser)
 			},
 			
 			dataBind : {
+			
 				labelField : Bind.to('label').as(HtmlEntities.asPosition)
 			},
 			
@@ -76,7 +79,7 @@
 			},
 			
 			onload : function(self, model) {
-				//alert(self.labelField.something);
+				
 				self.labelField.setColour('#333');
 			}
 		});
@@ -87,11 +90,15 @@
 			template : "<div><h1 id=\"title\"><%=get('label')%></h1><p><%=(new InputView(viewmodel)).render()%></p></div>",
 			
 			define : {
+			
 				h1 : Using.id('title')
 			},
 			
 			dataBind : {
-				h1 : Bind.to('label').as(HtmlEntities.asSetter)
+			
+				h1 : Bind.to('label')
+			
+				//h1 : Bind.to('label').as(HtmlEntities.asSetter)
 			},
 			
 			onload : function(self, model) {
@@ -119,7 +126,7 @@
 			label : "hiii there",
 			templateUrl : "https://localhost/API/designers/850451b4-5c31-4c91-b210-4aa8da9ab028/Templates/4820.png?size=Small",
 			inputmodel : { label : "hiii there" }
-			});
+		});
 		
 		
 		

@@ -102,7 +102,7 @@ var Using = {
 
 	id : function(elementId) {
 		
-		returnFunction = function() {
+		var returnFunction = function() {
 		
 			return document.getElementById(elementId);
 		};
@@ -128,34 +128,45 @@ var Bind = {
 
 	to : function(modelFieldName) {
 	
-		return {
+		var _setupBinding = function (el, model) {
 		
-			as : function (modifier) {
+			el.onchange = function() {
 				
-				return function(model) {
-				
-					// this function should be called using  
-					//   func.call(body, model)  
-					// to inject the 'this' var 
-					var self = this;
-				
-					self.onchange = function() {
-						
-						model.set(modelFieldName, this.value);
-					};
-					
-					model.onchange(modelFieldName, function(newval) {
-					
-						modifier(self).set(newval);
-					});						
-				};
-			}
+				model.set(modelFieldName, el.value);
+			};
+			
+			model.onchange(modelFieldName, function(newval) {
+			
+				el.set(newval);
+			});
 		};
+	
+		var returnFunction = function(model) { 
+			
+			// this mixin is just assuming the value is the value or just the innerHTML
+			this.set = function(newval) { 
+				this.value ? this.value = newval : this.innerHTML = newval; 
+			};
+			
+			_setupBinding(this, model);
+		};
+		
+		returnFunction.as = function (mixin) {
+
+			return function(model) { 
+				
+				this.set = function(newval) { mixin(this).set(newval); }
+				
+				_setupBinding(this, model);
+			}			
+		};
+		
+		return returnFunction;
 	}
 };
 
 
-
+/*
 var Data = {
 
 	bind : function(elementName) {
@@ -188,7 +199,7 @@ var Data = {
 		};
 	}
 };
-
+*/
 
 
 
@@ -231,8 +242,8 @@ var Views = {
 		
 		return function(model) {		
 			
-			
 			_queueDomBindings = function() {
+			
 					// when everything is rendered populate the references to the 
 					// html dom elements, and do databind
 					for(el in body.define) {
@@ -255,13 +266,12 @@ var Views = {
 										*/
 										body.dataBind[el].call(body[el], model);
 									}
-									
 								}
 								
 							})(el));
 						}
-					}				
-			};			
+					}
+			};
 			
 			_fireIfPresent = function(eventname, data) {
 			
