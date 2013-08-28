@@ -89,7 +89,6 @@ var SetterMixins = {
 			o.value = val;
 		});
 	},
-	
 		
 	html : function() {
 	
@@ -104,6 +103,14 @@ var SetterMixins = {
 		return SetterMixins._setterBase(this, function(o, val) {
 		
 			o.style.left = val + 'px';
+		});
+	},
+	
+	rotation : function() {
+	
+		return SetterMixins._setterBase(this, function(o, val) {
+		
+			o.style.transform = 'rotateZ( ' + deg + 'deg )';
 		});
 	}
 	

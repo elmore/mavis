@@ -6,9 +6,7 @@
 </head>
 <body>
 	
-	<h1 id="testh1">original</h1>
-	
-	
+
 	<style type="text/css">
 	
 		input
@@ -99,9 +97,7 @@
 			
 			dataBind : {
 			
-				h1 : Bind.to('label')
-			
-				//h1 : Bind.to('label').as(HtmlEntities.asSetter)
+				h1 : Bind.to('label').as(SetterMixins.rotation)
 			},
 			
 			onload : function(self, model) {
@@ -125,9 +121,13 @@
 		
 		
 		var m = new Model({ 
+		
 			cdnLocation : "https://localhost/PCS/CDN", 
+			
 			label : "hiii there",
+			
 			templateUrl : "https://localhost/API/designers/850451b4-5c31-4c91-b210-4aa8da9ab028/Templates/4820.png?size=Small",
+			
 			inputmodel : { label : "hiii there" }
 		});
 		
@@ -146,21 +146,7 @@
 	
 	
 	
-	
-	
-	
-	
-		
-	
-		var h1 = document.getElementById('testh1');
-		
-	
-		SetterMixins.html.call(h1);
-	
-		h1.set('some text sdfsd fsdf ');
-	
-	
-	
+
 	
 	</script>
 </body>
