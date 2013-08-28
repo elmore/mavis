@@ -28,7 +28,7 @@ function InterfaceType(body) {
 }
 
 
-
+// should these be mixins rather than setter wrappers?
 var HtmlEntities = {
 
 	_cache : [],
@@ -98,6 +98,31 @@ var iView = new InterfaceType({
 });
 
 
+var Using = {
+
+	id : function(elementId) {
+		
+		returnFunction = function() {
+		
+			return document.getElementById(elementId);
+		};
+		
+		// adding a function to the return function 
+		// means we can chain these together 
+		// e.g Using.id('elementId').as(function(el){ mod(e.style); });
+		returnFunction.as = function(mixin) {
+				
+			return function() {
+			
+				var el = document.getElementById(elementId);
+				
+				return mixin.call(el) || el;
+			};
+		};
+		
+		return returnFunction;
+	}
+};
 
 var Bind = {
 
@@ -109,11 +134,11 @@ var Bind = {
 				
 				return function(model) {
 				
-					var self = this;
-				
 					// this function should be called using  
 					//   func.call(body, model)  
 					// to inject the 'this' var 
+					var self = this;
+				
 					self.onchange = function() {
 						
 						model.set(modelFieldName, this.value);
@@ -132,6 +157,7 @@ var Bind = {
 
 
 var Data = {
+
 	bind : function(elementName) {
 		
 		return {
@@ -217,15 +243,9 @@ var Views = {
 								
 								// curry up the functionality which will be run and attach things
 								return function() {
-									
-									// define the elements
-									if(typeof body.define[el] === 'function') {
-									
-										body[el] = body.define[el]();
-									} else {
-										
-										body[el] = document.getElementById(body.define[el]);
-									}
+								
+									// run the curried definitions
+									body[el] = body.define[el]();
 									
 									// bind them to change events
 									if(body.dataBind && body.dataBind.hasOwnProperty(el)) {
@@ -253,8 +273,10 @@ var Views = {
 				if(body[eventname]) { 
 				
 					Views.EventQueue.push(function() {
-					
-						 body[eventname](body, data || model);
+						
+						// we are passing the body as context - we could call() 
+						// the event with the body as the context argument..
+						body[eventname](body, data || model);
 					});
 				}
 			};

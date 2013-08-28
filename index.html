@@ -47,14 +47,24 @@
 
 
 	<script type="text/javascript">
-
-
-
+	
+		
+		function asColouriser() {
+			
+			this.setColour = function(c) {
+				
+				this.style.backgroundColor = c;
+			};
+			
+			return this;
+		}
+	
+	
 		var InputView = new Views.ViewType({
 			template : "<input type=\"text\" id=\"label-field\" value=\"<%=get('label')%>\" />",					
 			
 			define : {
-				labelField : 'label-field'
+				labelField : Using.id('label-field').as(asColouriser)
 			},
 			
 			dataBind : {
@@ -66,7 +76,8 @@
 			},
 			
 			onload : function(self, model) {
-
+				//alert(self.labelField.something);
+				self.labelField.setColour('#333');
 			}
 		});
 		
@@ -76,7 +87,7 @@
 			template : "<div><h1 id=\"title\"><%=get('label')%></h1><p><%=(new InputView(viewmodel)).render()%></p></div>",
 			
 			define : {
-				h1 : 'title'
+				h1 : Using.id('title')
 			},
 			
 			dataBind : {
@@ -122,6 +133,24 @@
 			m.set('label', val);
 			val++;
 		}, 500);
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	</script>
 </body>
