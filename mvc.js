@@ -30,46 +30,45 @@ function InterfaceType(body) {
 
 
 var HtmlEntities = {
+
+	_cache : [],
+
+	as : function(domEl, action) {
+	
+		if(!HtmlEntities._cache[domEl]) { 
+			
+			HtmlEntities._cache[domEl] = {
+			
+				set : function(val) {
+				
+					action(val);
+				}
+			};		
+		}
+		
+		return HtmlEntities._cache[domEl];
+	},
+	
 	// smoothing over the setting of values
 	asSetter : function(domEl) {
 		
-		var action;
+		return HtmlEntities.as(domEl, 
 		
-		if(domEl.value) {
-		
-			action = function(val) {
+			domEl.value 
 			
-				domEl.value = val;
-			};
-		} else {
-		
-			action = function(val) {
+				? function(val) { domEl.value = val; } 
 			
-				domEl.innerHTML = val;
-			};
-		}
-		
-		return {
-		
-			set : function(val) {
-			
-				action(val);
-			}
-		};
+				:  function(val) { domEl.innerHTML = val; 
+		});
 	},
 	
 	asPosition : function(domEl) {
 	
-		return {
-		
-			set : function(val) {
+		return HtmlEntities.as(domEl, function(val) {
 			
-				domEl.style.left = val + 'px';
-			}
-		};
+			domEl.style.left = val + 'px';
+		});
 	}
-
-
 };
 
 
@@ -86,9 +85,6 @@ var Helpers = {
 			return el;
 		};
 	}
-	
-	
-
 };
 
 
