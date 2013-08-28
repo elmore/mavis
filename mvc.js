@@ -28,6 +28,7 @@ function InterfaceType(body) {
 }
 
 
+
 var HtmlEntities = {
 	// smoothing over the setting of values
 	asSetter : function(domEl) {
@@ -53,6 +54,17 @@ var HtmlEntities = {
 			set : function(val) {
 			
 				action(val);
+			}
+		};
+	},
+	
+	asPosition : function(domEl) {
+	
+		return {
+		
+			set : function(val) {
+			
+				domEl.style.left = val + 'px';
 			}
 		};
 	}
@@ -88,6 +100,86 @@ var iView = new InterfaceType({
 
 	template : ''
 });
+
+
+
+var Bind = {
+
+	to : function(modelFieldName) {
+	
+		return {
+		
+			as : function (modifier) {
+				
+				return function(model) {
+				
+					var self = this;
+				
+					// this function should be called using  
+					//   func.call(body, model)  
+					// to inject the 'this' var 
+					self.onchange = function() {
+						
+						model.set(modelFieldName, this.value);
+					};
+					
+					model.onchange(modelFieldName, function(newval) {
+					
+						modifier(self).set(newval);
+					});						
+				};
+			}
+		};
+	}
+};
+
+
+
+var Data = {
+	bind : function(elementName) {
+		
+		return {
+		
+			to : function(modelFieldName) {
+			
+				return {
+				
+					as : function (modifier) {
+						
+						return function(model) {
+							// this function should be called using  
+							//   func.call(body, model)  
+							// to inject the 'this' var 
+							this[elementName].onchange = function() {
+								
+								model.set(modelFieldName, this.value);
+							};
+							
+							model.onchange(modelFieldName, function(newval) {
+							
+								modifier(this[elementName]).set(newval);
+							});						
+						};
+					}
+				};
+			}
+		};
+	}
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
 * oncreate, onrenderstart, onrenderend, onload
@@ -126,9 +218,11 @@ var Views = {
 						if(body.define && body.define.hasOwnProperty(el)) {
 						
 							Views.EventQueue.push((function(el) {
-							
+								
+								// curry up the functionality which will be run and attach things
 								return function() {
 									
+									// define the elements
 									if(typeof body.define[el] === 'function') {
 									
 										body[el] = body.define[el]();
@@ -137,23 +231,20 @@ var Views = {
 										body[el] = document.getElementById(body.define[el]);
 									}
 									
+									// bind them to change events
 									if(body.dataBind && body.dataBind.hasOwnProperty(el)) {
-																		
-										body[el].onchange = function() {
-											
-											model.set(body.dataBind[el], this.value);
-										};
-										
-										model.onchange(body.dataBind[el], function(newval) {
-										
-											HtmlEntities.asSetter(body[el]).set(newval);
-										});
+									
+										/*
+										*  Bind.to('label').as(HtmlEntities.asPosition);
+										*/
+										body.dataBind[el].call(body[el], model);
 									}
+									
 								}
 								
 							})(el));
 						}
-					}					
+					}				
 			};			
 			
 			_fireIfPresent = function(eventname, data) {

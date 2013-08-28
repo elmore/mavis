@@ -6,6 +6,14 @@
 </head>
 <body>
 
+	<style type="text/css">
+	
+		input
+		{
+			position:absolute;
+		}
+	
+	</style>
 
 	<script type="text/javascript" src="jquery-1.10.2.min.js"></script>
 	<script type="text/javascript" src="jquery.livequery.min.js"></script>
@@ -47,35 +55,18 @@
 			
 			define : {
 				labelField : 'label-field'
-			/*
-				labelField : Helpers.asValidatedInput('label-field', function(a) {
-					alert(a);
-				})
-				*/
 			},
 			
 			dataBind : {
-				labelField : 'label'
+				labelField : Bind.to('label').as(HtmlEntities.asPosition)
 			},
 			
 			onrenderstart : function(self, model) {
-				//alert("onrenderstart :: InputView")
+				
 			},
 			
 			onload : function(self, model) {
-				/*
-				self.labelField.onchange = function() {
-				
-					model.set('label', this.value);
-				};
-				
-				model.onchange('label', function(newval) {
-				
-					self.labelField.value = newval;
-					
-					self.labelField.style.marginLeft = (newval*10) + "px";
-				});
-				*/
+
 			}
 		});
 		
@@ -89,17 +80,11 @@
 			},
 			
 			dataBind : {
-				h1 : 'label'
+				h1 : Bind.to('label').as(HtmlEntities.asSetter)
 			},
 			
 			onload : function(self, model) {
-				//alert("onrenderstart :: DivView")
-				/*
-				model.onchange('label', function(newval) {
-				
-					self.h1.innerHTML = newval;
-				});
-				*/
+
 			}			
 		});
 		
@@ -108,18 +93,14 @@
 			template : "designer_stage",
 			
 			onrenderstart : function(self, model) {
-				//alert("onrenderstart :: DesignerStageView")
 			},
 			
 			onload : function(self, model) {
-				//alert(document.getElementById('mask-bottom').id)
 			}
 		
 		});
 		
-		//var view1 = new DivView({ label : "my input" });
-		//view1.render(document.body);
-		//DesignerStageView
+
 		
 		
 		var m = new Model({ 
@@ -131,28 +112,10 @@
 		
 		
 		
-		/*
-		m.onchange('label', function(newval) {
-			alert(newval);
-		
-		});
-		m.onchange('label', function(newval) {
-			alert("2" + newval);
-		
-		});
-		*/
-		
-		//m.set('label', 'i changed you');
-		
-		//var view1 = new InputView(m);
-		//view1.render(document.body);
-	
 
 		var view2 = new DivView(m);
 		view2.render(document.body);
-	
-		//var el = document.createElement('div');
-		//el.onload = 
+
 	
 		var val = 0;
 		setInterval(function() {
