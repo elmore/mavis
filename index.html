@@ -5,7 +5,10 @@
 	<title></title>
 </head>
 <body>
-
+	
+	<h1 id="testh1">original</h1>
+	
+	
 	<style type="text/css">
 	
 		input
@@ -71,7 +74,7 @@
 			
 			dataBind : {
 			
-				labelField : Bind.to('label').as(HtmlEntities.asPosition)
+				labelField : Bind.to('label').as(SetterMixins.position)
 			},
 			
 			onrenderstart : function(self, model) {
@@ -147,14 +150,14 @@
 	
 	
 	
+		
 	
+		var h1 = document.getElementById('testh1');
+		
 	
+		SetterMixins.html.call(h1);
 	
-	
-	
-	
-	
-	
+		h1.set('some text sdfsd fsdf ');
 	
 	
 	

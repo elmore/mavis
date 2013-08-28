@@ -29,6 +29,7 @@ function InterfaceType(body) {
 
 
 // should these be mixins rather than setter wrappers?
+/*
 var HtmlEntities = {
 
 	_cache : [],
@@ -69,6 +70,44 @@ var HtmlEntities = {
 			domEl.style.left = val + 'px';
 		});
 	}
+};
+*/
+
+var SetterMixins = {
+	
+	_setterBase : function(el, setAction) {
+		
+		el.set = function(val) { setAction(el, val); }
+		
+		return el;
+	},
+	
+	value : function() {
+	
+		return SetterMixins._setterBase(this, function(o, val) {
+		
+			o.value = val;
+		});
+	},
+	
+		
+	html : function() {
+	
+		return SetterMixins._setterBase(this, function(o, val) {
+		
+			o.innerHTML = val;
+		});
+	},
+	
+	position : function() {
+	
+		return SetterMixins._setterBase(this, function(o, val) {
+		
+			o.style.left = val + 'px';
+		});
+	}
+	
+
 };
 
 
@@ -132,21 +171,22 @@ var Bind = {
 		
 			el.onchange = function() {
 				
+				// any model from our ModelType def will have a set method
 				model.set(modelFieldName, el.value);
 			};
 			
 			model.onchange(modelFieldName, function(newval) {
 			
+				// any element should have a set method by this point from 
+				// the usage of mixins (custom or default)
 				el.set(newval);
 			});
 		};
 	
 		var returnFunction = function(model) { 
 			
-			// this mixin is just assuming the value is the value or just the innerHTML
-			this.set = function(newval) { 
-				this.value ? this.value = newval : this.innerHTML = newval; 
-			};
+			// default mixin - just assuming the value is the value or just the innerHTML
+			this.value ? SetterMixins.value.call(this) : SetterMixins.html.call(this) 
 			
 			_setupBinding(this, model);
 		};
@@ -155,7 +195,8 @@ var Bind = {
 
 			return function(model) { 
 				
-				this.set = function(newval) { mixin(this).set(newval); }
+				// user defined mixin
+				mixin.call(this);
 				
 				_setupBinding(this, model);
 			}			
