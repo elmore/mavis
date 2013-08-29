@@ -29,12 +29,11 @@ function InterfaceType(body) {
 
 
 // should these be mixins rather than setter wrappers?
-/*
 var HtmlEntities = {
 
 	_cache : [],
 
-	as : function(domEl, action) {
+	as : function(domEl, action, n) {
 	
 		if(!HtmlEntities._cache[domEl]) { 
 			
@@ -43,24 +42,23 @@ var HtmlEntities = {
 				set : function(val) {
 				
 					action(val);
-				}
+				},
+				
+				name : n
 			};		
 		}
 		
 		return HtmlEntities._cache[domEl];
 	},
 	
-	// smoothing over the setting of values
-	asSetter : function(domEl) {
+	asValue : function(domEl) {
 		
-		return HtmlEntities.as(domEl, 
+		return HtmlEntities.as(domEl, function(val) { domEl.value = val; },  'asValue');
+	},
+	
+	asHtml : function(domEl) {
 		
-			domEl.value 
-			
-				? function(val) { domEl.value = val; } 
-			
-				:  function(val) { domEl.innerHTML = val; 
-		});
+		return HtmlEntities.as(domEl, function(val) { domEl.innerHTML = val; });
 	},
 	
 	asPosition : function(domEl) {
@@ -69,10 +67,20 @@ var HtmlEntities = {
 			
 			domEl.style.left = val + 'px';
 		});
+	},
+	
+	asRotation : function(domEl) {
+	
+		return HtmlEntities.as(domEl, function(val) {
+
+			domEl.style['-webkit-transform'] = 'rotateZ( ' + val + 'deg )';
+			
+			domEl.style['transform'] = 'rotateZ( ' + val + 'deg )';
+		}, 'asRotation');
 	}
 };
-*/
 
+/*
 // mixins for binding elements to model values. we need to know what 
 // type of a thing we want to update, so we mix in a setter method
 // that does what we want
@@ -110,7 +118,7 @@ var SetterMixins = {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
 		
-			o.value = val;
+			o.value = pre ? pre(val) : val;
 		});
 	},
 			
@@ -134,10 +142,21 @@ var SetterMixins = {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
 		
-			o.style.transform = 'rotateZ( ' + (pre ? pre(val) : val) + 'deg )';
+			o.style['-webkit-transform'] = 'rotateZ( ' + (pre ? pre(val) : val) + 'deg )';
+			
+			o.style['transform'] = 'rotateZ( ' + (pre ? pre(val) : val) + 'deg )';
+		});
+	},
+	
+	coordinate : function(pre) {
+	
+		return SetterMixins._setterBase(this, function(o, val) {
+		
+			o.style.left = val.x + 'px';
+			
+			o.style.top = val.y + 'px';
 		});
 	}
-	
 
 };
 
@@ -156,7 +175,7 @@ var Helpers = {
 		};
 	}
 };
-
+*/
 
 
 
@@ -193,7 +212,7 @@ var Using = {
 		return returnFunction;
 	}
 };
-
+/*
 var Bind = {
 
 	to : function(modelFieldName) {
@@ -235,7 +254,7 @@ var Bind = {
 			asFunction.preprocess = function(pre) {
 			
 				return function(model) {
-			
+				
 					// user defined mixin with preprocessor
 					mixin.call(this, pre);
 					
@@ -249,42 +268,64 @@ var Bind = {
 		return toFunction;
 	}
 };
+*/
 
 
-/*
-var Data = {
+var Bind = {
 
-	bind : function(elementName) {
+	to : function(modelFieldName) {
+	
+		var _setupBinding = function (el, setter, model) {
 		
-		return {
-		
-			to : function(modelFieldName) {
-			
-				return {
+			console.log(el.id + ' : '+ setter(el).name);
+
+			el.onchange = function() {
 				
-					as : function (modifier) {
-						
-						return function(model) {
-							// this function should be called using  
-							//   func.call(body, model)  
-							// to inject the 'this' var 
-							this[elementName].onchange = function() {
-								
-								model.set(modelFieldName, this.value);
-							};
-							
-							model.onchange(modelFieldName, function(newval) {
-							
-								modifier(this[elementName]).set(newval);
-							});						
-						};
-					}
-				};
-			}
+				// any model from our ModelType def will have a set method
+				model.set(modelFieldName, el.value);
+			};
+			
+			model.onchange(modelFieldName, function(newval) {
+				
+				// any element should have a set method by this point from 
+				// the usage of mixins (custom or default)
+				setter(el).set(newval);
+			});
+			
 		};
+	
+		var toFunction = function(model) { 
+			
+			var mixin = this.value ? HtmlEntities.asValue : HtmlEntities.asHtml;
+			
+			_setupBinding(this, mixin, model);
+		};
+		
+		toFunction.as = function (mixin, id) {
+		
+			console.log(modelFieldName + " : " + mixin({}).name + " : " + id);
+			
+			var asFunction = function(model) { 
+				
+				_setupBinding(this, mixin, model);
+			}
+/*
+			asFunction.preprocess = function(pre) {
+			
+				return function(model) {
+				
+					_setupBinding(this, mixin, model);
+				} 
+			};
+			*/
+			return asFunction;
+		};
+		
+		return toFunction;
 	}
 };
-*/
+
+
 
 
 
@@ -355,10 +396,6 @@ var Views = {
 								
 								// bind them to change events if they exist on the dataBind object
 								if(body.dataBind && body.dataBind.hasOwnProperty(el)) {
-								
-									/*
-									*  Bind.to('label').as(HtmlEntities.asPosition);
-									*/
 									
 									// single binding
 									if(typeof body.dataBind[el] === 'function') {
@@ -457,9 +494,9 @@ function Model(body) {
 	var _notify = function(property) {	
 	
 		if(_events[property]) {
-		
-			for(var i=0; i<_events[property].length; i++) {
 			
+			for(var i=0; i<_events[property].length; i++) {
+				
 				_events[property][i](body[property]);			
 			}
 		}	
