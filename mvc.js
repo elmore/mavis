@@ -106,7 +106,7 @@ var SetterMixins = {
 		return el;
 	},
 	
-	value : function() {
+	value : function(pre) {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
 		
@@ -114,27 +114,27 @@ var SetterMixins = {
 		});
 	},
 			
-	html : function() {
+	html : function(pre) {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
 		
-			o.innerHTML = val;
+			o.innerHTML = pre ? pre(val) : val;
 		});
 	},
 	
-	position : function() {
+	position : function(pre) {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
 		
-			o.style.left = val + 'px';
+			o.style.left = (pre ? pre(val) : val) + 'px';
 		});
 	},
 	
-	rotation : function() {
+	rotation : function(pre) {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
 		
-			o.style.transform = 'rotateZ( ' + val + 'deg )';
+			o.style.transform = 'rotateZ( ' + (pre ? pre(val) : val) + 'deg )';
 		});
 	}
 	
@@ -214,7 +214,7 @@ var Bind = {
 			});
 		};
 	
-		var returnFunction = function(model) { 
+		var toFunction = function(model) { 
 			
 			// default mixin - just assuming the value is the value or just the innerHTML
 			this.value ? SetterMixins.value.call(this) : SetterMixins.html.call(this) 
@@ -222,18 +222,31 @@ var Bind = {
 			_setupBinding(this, model);
 		};
 		
-		returnFunction.as = function (mixin) {
+		toFunction.as = function (mixin) {
 
-			return function(model) { 
+			var asFunction = function(model) { 
 				
 				// user defined mixin
 				mixin.call(this);
 				
 				_setupBinding(this, model);
-			}			
+			}
+
+			asFunction.preprocess = function(pre) {
+			
+				return function(model) {
+			
+					// user defined mixin with preprocessor
+					mixin.call(this, pre);
+					
+					_setupBinding(this, model);
+				} 
+			};
+			
+			return asFunction;
 		};
 		
-		return returnFunction;
+		return toFunction;
 	}
 };
 
@@ -346,11 +359,14 @@ var Views = {
 									/*
 									*  Bind.to('label').as(HtmlEntities.asPosition);
 									*/
+									
+									// single binding
 									if(typeof body.dataBind[el] === 'function') {
 									
 										body.dataBind[el].call(body[el], model);
 									} 
 									
+									// collection of binders
 									if(typeof body.dataBind[el] === 'object') {
 									
 										for(var i=0; i<body.dataBind[el].length; i++) {

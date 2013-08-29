@@ -78,8 +78,16 @@
 			dataBind : {
 			
 				labelField : [
-					Bind.to('label').as(SetterMixins.position), 
-					Bind.to('label').as(SetterMixins.value)
+				
+					Bind.to('label').as(SetterMixins.position).preprocess(function(val){ 
+						var v = val > 90 ? ((180 - val) * 10)  : (val * 10);
+						
+						return  v < 0 ? ((val- 270) * 10)  : v;
+					}), 
+					
+					Bind.to('label').as(SetterMixins.value),
+					
+					Bind.to('label').as(SetterMixins.rotation).preprocess(function(val){ return (val * 10); }),
 				]
 			},
 			
@@ -146,11 +154,12 @@
 		view2.render(document.body);
 
 	
+	
 		var val = 0;
 		setInterval(function() {
 			m.set('label', val);
 			val++;
-		}, 500);
+		}, 50);
 	
 	
 	
