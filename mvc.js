@@ -73,6 +73,9 @@ var HtmlEntities = {
 };
 */
 
+// mixins for binding elements to model values. we need to know what 
+// type of a thing we want to update, so we mix in a setter method
+// that does what we want
 var SetterMixins = {
 	
 	_setterBase : function(el, setAction) {
@@ -89,7 +92,7 @@ var SetterMixins = {
 			o.value = val;
 		});
 	},
-		
+			
 	html : function() {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
@@ -110,7 +113,7 @@ var SetterMixins = {
 	
 		return SetterMixins._setterBase(this, function(o, val) {
 		
-			o.style.transform = 'rotateZ( ' + deg + 'deg )';
+			o.style.transform = 'rotateZ( ' + val + 'deg )';
 		});
 	}
 	
@@ -266,9 +269,12 @@ var Data = {
 * oncreate, onrenderstart, onrenderend, onload
 */
 var Views = {
-
+	
+	// single Views-wide queue - should really be private and one 
+	// per instance...
 	EventQueue : [],
-		
+	
+	// cycle round queue emptying and firing events
 	FireQueuedEvents : function() {
 	
 		while(Views.EventQueue.length > 0) {
@@ -277,55 +283,65 @@ var Views = {
 		}
 	},
 	
-	
+	// base class for views: var myViewType = new ViewType({ });
 	ViewType : function(body) {
 		
+		// not sure if this is helpful or not - just experimenting with an
+		// interface/validation pattern
 		if(!iView.implements(body)) {
 		
 			throw "the body of the ViewType does not implement iView";
 		}
-
+		
+		// initialise the modified resig templater to use the desired tags
 		var _templater = new TemplaterFactory({ starttag : "<%", endtag : "%>"});
 
-		
+		// returns a builder for views of this type
 		return function(model) {		
 			
+			// private function which curries up the definitions and binding from the body
+			// and puts them into a queue to be run when the page has loaded
 			_queueDomBindings = function() {
 			
-					// when everything is rendered populate the references to the 
-					// html dom elements, and do databind
-					for(el in body.define) {
+				// when everything is rendered populate the references to the 
+				// html dom elements, and do databind
+				for(el in body.define) {
 					
-						if(body.define && body.define.hasOwnProperty(el)) {
+					if(body.define.hasOwnProperty(el)) {
 						
-							Views.EventQueue.push((function(el) {
+						// pushing all the binding to dom elements into a queue so that they can be
+						// run once the page has been rendered
+						Views.EventQueue.push((function(el) {
+							
+							// curry up the functionality which will be run and attach things
+							return function() {
+							
+								// run the curried definition
+								body[el] = body.define[el]();
 								
-								// curry up the functionality which will be run and attach things
-								return function() {
+								// bind them to change events if they exist on the dataBind object
+								if(body.dataBind && body.dataBind.hasOwnProperty(el)) {
 								
-									// run the curried definitions
-									body[el] = body.define[el]();
-									
-									// bind them to change events
-									if(body.dataBind && body.dataBind.hasOwnProperty(el)) {
-									
-										/*
-										*  Bind.to('label').as(HtmlEntities.asPosition);
-										*/
-										body.dataBind[el].call(body[el], model);
-									}
+									/*
+									*  Bind.to('label').as(HtmlEntities.asPosition);
+									*/
+									body.dataBind[el].call(body[el], model);
 								}
-								
-							})(el));
-						}
+							}
+							
+						// create closure around el
+						})(el));
 					}
+				}
 			};
 			
+			// if the body has a definition for a particular event, fire it
 			_fireIfPresent = function(eventname, data) {
 			
 				if(body[eventname]) { body[eventname](body, data || model); }
 			};
 			
+			// if the body has a definition for a particular event, queue it
 			_queueIfPresent = function(eventname, data) {
 			
 				if(body[eventname]) { 
@@ -339,27 +355,41 @@ var Views = {
 				}
 			};
 			
+			// queue bindings ready for post-render
 			_queueDomBindings();
 			
+			// fire straight away
 			_fireIfPresent('oncreate');
 			
+			// public render function. draws the full tree of widgets onto the page
 			this.render = function(parent) {
-			
+				
+				// fire render start
 				_fireIfPresent('onrenderstart');
 			
+				// queue up the onload in preparation
 				_queueIfPresent('onload');
 				
+				// do the templating - take the template from the body and mash
+				// it with the model
 				var html = _templater.tmpl(body.template, model || {});
 				
+				// done rendering
 				_fireIfPresent('onrenderend');		
 				
+				// if this is the root of the tree..
 				if(parent) {
-				
+					
+					// attach the html to the dom element
 					parent.innerHTML += html;
 					
+					// fire all the queued events that have been waiting for the 
+					// elements to be in the dom
 					Views.FireQueuedEvents();
 				} 
 				
+				// return the html so that we can use the method
+				// to return the templated html string eg for partial views
 				return html;
 			};
 		
@@ -367,11 +397,13 @@ var Views = {
 	}
 }
 
-
+// builder for models
 function Model(body) {
-
+	
+	// list of event subscribers
 	var _events = [];
-
+	
+	// notify everyone registered that the property has changed
 	var _notify = function(property) {	
 	
 		if(_events[property]) {
@@ -383,6 +415,10 @@ function Model(body) {
 		}	
 	};
 	
+	/* 
+	* the body object is wrapped with getters and setters
+	* so that all changes can be hooked into for change events
+	*/ 
 	this.get = function(property) {
 	
 		return body[property];
@@ -395,6 +431,7 @@ function Model(body) {
 		_notify(property);
 	};
 	
+	// register on change event
 	this.onchange = function(property, handler) {
 	
 		if(!_events[property]) {
