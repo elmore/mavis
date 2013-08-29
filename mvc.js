@@ -80,8 +80,29 @@ var SetterMixins = {
 	
 	_setterBase : function(el, setAction) {
 		
-		el.set = function(val) { setAction(el, val); }
+		// if there is a setter already..
+		if(el.set) {
+			
+			// keep ref to existing function
+			var oldSet = el.set;
+			
+			// attach a new version, overwriting the old
+			el.set = function(val) { 
+				
+				// fire the existing stuff
+				oldSet(val);
+				
+				// fire the new stuff
+				setAction(el, val); 
+			}
+		// if there isnt already a setter	
+		} else {
+			
+			// fire the action when setter is called
+			el.set = function(val) { setAction(el, val); };
+		}
 		
+		// return the reference so this can be used as a mixin
 		return el;
 	},
 	
@@ -325,7 +346,18 @@ var Views = {
 									/*
 									*  Bind.to('label').as(HtmlEntities.asPosition);
 									*/
-									body.dataBind[el].call(body[el], model);
+									if(typeof body.dataBind[el] === 'function') {
+									
+										body.dataBind[el].call(body[el], model);
+									} 
+									
+									if(typeof body.dataBind[el] === 'object') {
+									
+										for(var i=0; i<body.dataBind[el].length; i++) {
+											
+											body.dataBind[el][i].call(body[el], model);
+										}
+									}
 								}
 							}
 							
@@ -343,9 +375,11 @@ var Views = {
 			
 			// if the body has a definition for a particular event, queue it
 			_queueIfPresent = function(eventname, data) {
-			
-				if(body[eventname]) { 
 				
+				// if present
+				if(body[eventname]) { 
+					
+					// queue
 					Views.EventQueue.push(function() {
 						
 						// we are passing the body as context - we could call() 

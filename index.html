@@ -77,7 +77,10 @@
 			
 			dataBind : {
 			
-				labelField : Bind.to('label').as(SetterMixins.position),
+				labelField : [
+					Bind.to('label').as(SetterMixins.position), 
+					Bind.to('label').as(SetterMixins.value)
+				]
 			},
 			
 			onrenderstart : function(self, model) {
@@ -86,7 +89,7 @@
 			
 			onload : function(self, model) {
 				
-				self.labelField.setColour('#333');
+				//self.labelField.setColour('#333');
 			}
 		});
 		
